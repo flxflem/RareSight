@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RareSight — Gene Therapy Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & base ──────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:      #1a7a4a;
+    --green-light:#e8f5ee;
+    --green-mid:  #c6e8d4;
+    --green-dark: #0f5233;
+    --amber:      #b45309;
+    --amber-light:#fef3c7;
+    --red:        #dc2626;
+    --red-light:  #fee2e2;
+    --ink:        #111827;
+    --ink-mid:    #374151;
+    --ink-light:  #6b7280;
+    --border:     #e5e7eb;
+    --surface:    #f9fafb;
+    --white:      #ffffff;
+    --sidebar-w:  320px;
+    --mono:       'IBM Plex Mono', monospace;
+    --serif:      'Lora', Georgia, serif;
+    --sans:       'Inter', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--surface);
+    font-size: 14px;
+  }
+
+  /* ── Layout ────────────────────────────────────────────────────────────── */
+  .app {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ───────────────────────────────────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--green-dark);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 20px,
+      rgba(255,255,255,0.015) 20px,
+      rgba(255,255,255,0.015) 40px
+    );
+    pointer-events: none;
+  }
+
+  .brand {
+    padding: 32px 28px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .brand-logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .brand-name {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.1;
+  }
+
+  .brand-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 6px;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .form-section {
+    padding: 28px 28px 0;
+    flex: 1;
+  }
+
+  .field {
+    margin-bottom: 22px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 8px;
+  }
+
+  .field input {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: #ffffff;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .field input::placeholder { color: rgba(255,255,255,0.25); }
+  .field input:focus {
+    border-color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.12);
+  }
+
+  .field .hint {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 5px;
+    font-style: italic;
+  }
+
+  .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 6px 0 22px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 14px;
+  }
+
+  .btn-run {
+    width: 100%;
+    padding: 14px;
+    background: #ffffff;
+    color: var(--green-dark);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-run:hover:not(:disabled) { background: #e8f5ee; transform: translateY(-1px); }
+  .btn-run:active { transform: translateY(0); }
+  .btn-run:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-pdf {
+    width: 100%;
+    padding: 11px;
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .btn-pdf:hover:not(:disabled) {
+    border-color: rgba(255,255,255,0.45);
+    color: #ffffff;
+    background: rgba(255,255,255,0.06);
+  }
+  .btn-pdf:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .sidebar-footer {
+    padding: 20px 28px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: auto;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+  .status-idle    { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.4); }
+  .status-loading { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+  .status-done    { background: rgba(26,122,74,0.4); color: #86efac; }
+  .status-error   { background: rgba(220,38,38,0.3); color: #fca5a5; }
+
+  .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Main output panel ─────────────────────────────────────────────────── */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--white);
+  }
+
+  .output-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--ink-light);
+    text-align: center;
+    padding: 40px;
+    gap: 16px;
+  }
+  .output-empty svg { opacity: 0.15; }
+  .output-empty h2 {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--ink-mid);
+  }
+  .output-empty p { font-size: 13px; max-width: 360px; line-height: 1.6; }
+
+  .output-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 36px 40px 60px;
+    display: none;
+  }
+  .output-content.visible { display: block; }
+
+  /* ── Report header ─────────────────────────────────────────────────────── */
+  .report-header {
+    border-bottom: 2px solid var(--green);
+    padding-bottom: 18px;
+    margin-bottom: 28px;
+  }
+  .report-header h1 {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .report-header .variant-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--green-light);
+    color: var(--green-dark);
+    padding: 3px 10px;
+    border-radius: 5px;
+    margin-top: 6px;
+  }
+  .report-meta {
+    font-size: 11px;
+    color: var(--ink-light);
+    margin-top: 8px;
+    font-family: var(--mono);
+  }
+
+  /* ── Sections ──────────────────────────────────────────────────────────── */
+  .section {
+    margin-bottom: 32px;
+  }
+
+  .section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--green-mid);
+  }
+
+  /* ── Identity grid ─────────────────────────────────────────────────────── */
+  .id-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .id-cell {
+    background: var(--white);
+    padding: 12px 14px;
+  }
+  .id-cell .key {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink-light);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 3px;
+  }
+  .id-cell .val {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink);
+    word-break: break-all;
+  }
+  .id-cell .val a {
+    color: var(--green);
+    text-decoration: none;
+  }
+  .id-cell .val a:hover { text-decoration: underline; }
+
+  /* ── Mechanism row ─────────────────────────────────────────────────────── */
+  .mech-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .mech-chip {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mech-chip.gof  { background: #fef3c7; color: #92400e; }
+  .mech-chip.lof  { background: #dbeafe; color: #1e40af; }
+  .mech-chip.dn   { background: #f3e8ff; color: #6b21a8; }
+  .mech-chip.mix  { background: #f3f4f6; color: var(--ink-mid); }
+  .mech-chip.unk  { background: #f3f4f6; color: var(--ink-light); }
+
+  .conf-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .conf-high   { background: #dcfce7; color: #166534; }
+  .conf-medium { background: #fef9c3; color: #854d0e; }
+  .conf-low    { background: #fee2e2; color: #991b1b; }
+
+  .inherit-tag {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+  }
+
+  /* ── Literature ─────────────────────────────────────────────────────────── */
+  .lit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .lit-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .lit-card .num {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--green);
+    line-height: 1;
+  }
+  .lit-card .lbl {
+    font-size: 11px;
+    color: var(--ink-light);
+    margin-top: 4px;
+  }
+  .tier-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--green-light);
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  .tier-bar .tier-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--green-dark);
+  }
+  .tier-bar .tier-note {
+    font-size: 12px;
+    color: var(--ink-mid);
+    line-height: 1.5;
+  }
+  .pmids {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .pmid-link {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--green);
+    text-decoration: none;
+  }
+  .pmid-link:hover { background: var(--green-light); }
+
+  /* ── Variant analysis ──────────────────────────────────────────────────── */
+  .variant-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .variant-panel .vp-header {
+    background: var(--green-dark);
+    color: #ffffff;
+    padding: 12px 18px;
+    font-family: var(--mono);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .variant-panel .vp-body {
+    padding: 18px;
+  }
+  .vp-row {
+    display: flex;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    align-items: flex-start;
+  }
+  .vp-row:last-child { border-bottom: none; }
+  .vp-row .vk {
+    flex: 0 0 190px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-light);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-top: 1px;
+  }
+  .vp-row .vv {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .feature-hit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    margin-top: 6px;
+    font-size: 12px;
+  }
+  .feature-hit.active-site { background: #fee2e2; border: 1px solid #fca5a5; color: #7f1d1d; }
+  .feature-hit.binding-site { background: #fff7ed; border: 1px solid #fed7aa; color: #7c2d12; }
+  .feature-hit.domain { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }
+  .feature-tag {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.08);
+  }
+
+  .aso-box {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+    border: 1px solid;
+  }
+  .aso-box.feasible { background: #f0fdf4; border-color: #86efac; color: #14532d; }
+  .aso-box.uncertain { background: #fefce8; border-color: #fde047; color: #713f12; }
+
+  /* ── Therapy combo cards ───────────────────────────────────────────────── */
+  .combo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .combo-card {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--white);
+    transition: box-shadow 0.15s;
+  }
+  .combo-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .combo-card.combo-primary {
+    border-color: var(--green-mid);
+    border-left: 4px solid var(--green);
+  }
+
+  .combo-rank-badge {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    padding: 10px 7px;
+    background: var(--green);
+    color: white;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .combo-rank-badge.alt {
+    background: var(--surface);
+    color: var(--ink-light);
+    border-right: 1px solid var(--border);
+  }
+
+  .combo-body {
+    flex: 1;
+    padding: 12px 16px;
+    min-width: 0;
+  }
+
+  .combo-payload {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .combo-delivery {
+    font-size: 12px;
+    color: var(--green-dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 5px;
+  }
+
+  .combo-notes {
+    font-size: 11px;
+    color: var(--ink-light);
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .combo-conf {
+    flex-shrink: 0;
+    width: 180px;
+    padding: 12px 14px;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--surface);
+  }
+
+  .conf-dots {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 2px;
+  }
+
+  .conf-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+  }
+  .conf-dot.filled { opacity: 1; }
+  .conf-dot.empty  { opacity: 0.2; }
+
+  .conf-dot-high         { color: #16a34a; background: #16a34a; }
+  .conf-dot-medium       { color: #d97706; background: #d97706; }
+  .conf-dot-low          { color: #dc2626; background: #dc2626; }
+  .conf-dot-experimental { color: #7c3aed; background: #7c3aed; }
+
+  .combo-conf .conf-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+  .conf-high         .conf-label { color: #16a34a; }
+  .conf-medium       .conf-label { color: #d97706; }
+  .conf-low          .conf-label { color: #dc2626; }
+  .conf-experimental .conf-label { color: #7c3aed; }
+
+  .combo-conf .conf-rationale {
+    font-size: 10px;
+    color: var(--ink-light);
+    line-height: 1.5;
+  }
+
+  /* ── CRISPR table ──────────────────────────────────────────────────────── */
+  .crispr-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .crispr-badge {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .crispr-badge.strategy { background: #f1f5f9; color: #334155; }
+  .crispr-badge.cbe  { background: #fef3c7; color: #92400e; }
+  .crispr-badge.abe  { background: #eff6ff; color: #1e40af; }
+  .crispr-badge.pe   { background: #f5f3ff; color: #4c1d95; }
+
+  .crispr-seq-ctx {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: #1e293b;
+    color: #94a3b8;
+    padding: 10px 14px;
+    border-radius: 7px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-bottom: 14px;
+    line-height: 1.7;
+  }
+
+  .guide-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .guide-table th {
+    background: var(--green-dark);
+    color: #ffffff;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .guide-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .guide-table tr:nth-child(even) td { background: var(--surface); }
+  .guide-table .seq-cell {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .guide-table .score-cell {
+    font-family: var(--mono);
+    font-weight: 600;
+  }
+  .score-high  { color: #166534; }
+  .score-mid   { color: #854d0e; }
+  .score-low   { color: #991b1b; }
+
+  .flag-pill {
+    display: inline-block;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: #fee2e2;
+    color: #991b1b;
+    margin: 1px;
+    font-family: var(--mono);
+  }
+
+  /* ── Protein features ──────────────────────────────────────────────────── */
+  .feat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .feat-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-size: 12px;
+    background: var(--white);
+  }
+  .feat-type-tag {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .ft-domain { background: #dbeafe; color: #1e3a8a; }
+  .ft-active { background: #fee2e2; color: #7f1d1d; }
+  .ft-binding { background: #fff7ed; color: #7c2d12; }
+  .feat-desc { flex: 1; color: var(--ink); }
+  .feat-pos { font-family: var(--mono); font-size: 11px; color: var(--ink-light); }
+
+  /* ── ClinVar variants table ────────────────────────────────────────────── */
+  .cv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .cv-table th {
+    background: var(--surface);
+    color: var(--ink-mid);
+    padding: 7px 10px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 2px solid var(--green-mid);
+  }
+  .cv-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    vertical-align: top;
+  }
+  .cv-table tr:hover td { background: var(--surface); }
+  .mech-lof  { color: #1e40af; font-weight: 600; }
+  .mech-gof  { color: #92400e; font-weight: 600; }
+  .mech-unk  { color: var(--ink-light); }
+
+  /* ── Pathways ──────────────────────────────────────────────────────────── */
+  .pathway-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .pathway-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .db-tag {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+  }
+  .db-kegg { background: #fef3c7; color: #92400e; }
+  .db-reactome { background: #dbeafe; color: #1e40af; }
+  .db-wikipathways { background: #f5f3ff; color: #6b21a8; }
+
+  .downstream-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .dnchip {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #78350f;
+    border-radius: 999px;
+  }
+
+  /* ── Known drugs ───────────────────────────────────────────────────────── */
+  .drug-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+  }
+  .drug-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .drug-card .dname {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 4px;
+    text-transform: capitalize;
+  }
+  .drug-card .dphase {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    margin-bottom: 5px;
+  }
+  .phase-4 { background: #dcfce7; color: #166534; }
+  .phase-3 { background: #dbeafe; color: #1e40af; }
+  .phase-2 { background: #fef9c3; color: #854d0e; }
+  .phase-1 { background: #f3f4f6; color: var(--ink-mid); }
+  .drug-card .dmech { font-size: 11px; color: var(--ink-light); line-height: 1.4; }
+
+  /* ── Warnings / notes ──────────────────────────────────────────────────── */
+  .notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .note-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    border: 1px solid;
+  }
+  .note-item.warn {
+    background: var(--amber-light);
+    border-color: #fcd34d;
+    color: #78350f;
+  }
+  .note-item.critical {
+    background: var(--red-light);
+    border-color: #fca5a5;
+    color: #7f1d1d;
+  }
+  .note-icon { flex-shrink: 0; font-size: 14px; }
+
+  /* ── OMIM text ─────────────────────────────────────────────────────────── */
+  .omim-text {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--ink-mid);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  /* ── Modality guide panels ─────────────────────────────────────────────── */
+  .mg-param-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .mg-param-cell {
+    background: var(--white);
+    padding: 10px 14px;
+  }
+
+  .mg-param-key {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--ink-light);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 3px;
+  }
+
+  .mg-param-val {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  .mg-detail {
+    margin-bottom: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green-mid);
+    border-radius: 0 7px 7px 0;
+  }
+
+  .mg-detail-key {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--green-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+
+  .mg-detail-val {
+    font-size: 12px;
+    color: var(--ink-mid);
+    line-height: 1.6;
+  }
+
+  .mg-sublabel {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink-light);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 4px;
+    margin-top: 12px;
+  }
+
+  .mg-notes-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .mg-note {
+    font-size: 11px;
+    color: var(--ink-mid);
+    padding: 7px 12px;
+    background: var(--surface);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    line-height: 1.5;
+  }
+
+  /* ── Assay Generator ──────────────────────────────────────────────────── */
+  .assay-launch {
+    margin-top: 2.5rem;
+    padding: 1.5rem;
+    background: var(--green-light);
+    border: 1px solid var(--green-mid);
+    border-radius: 10px;
+    text-align: center;
+  }
+  .assay-launch-text {
+    font-family: var(--serif);
+    font-size: 1rem;
+    color: var(--green-dark);
+    margin-bottom: 1rem;
+    font-style: italic;
+  }
+  .btn-assay {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-assay:hover { background: var(--green-dark); transform: translateY(-1px); }
+
+  /* Assay question panel */
+  #assayPanel {
+    display: none;
+    margin-top: 2rem;
+    padding: 28px 32px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  #assayPanel h2 {
+    font-family: var(--serif);
+    color: var(--green-dark);
+    font-size: 20px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--green-mid);
+  }
+  .assay-form-group { margin-bottom: 28px; }
+  .assay-form-group h3 {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--green);
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--green-mid);
+  }
+  .assay-field { margin-bottom: 14px; }
+  .assay-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-mid);
+    margin-bottom: 4px;
+  }
+  .assay-field .field-hint {
+    font-size: 11px;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-bottom: 5px;
+  }
+  .assay-field input[type="text"],
+  .assay-field input[type="number"],
+  .assay-field select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--white);
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+  .assay-field input:focus,
+  .assay-field select:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(26,122,74,0.12);
+  }
+  .checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+  }
+  .checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ink-mid);
+    cursor: pointer;
+  }
+  .checkbox-group input[type="checkbox"] { accent-color: var(--green); }
+  .btn-generate-protocol {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    margin-top: 20px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.2s;
+  }
+  .btn-generate-protocol:hover:not(:disabled) { background: var(--green-dark); }
+  .btn-generate-protocol:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Protocol display */
+  #protocolPanel { display: none; margin-top: 2rem; }
+  .protocol-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .protocol-header h2 {
+    font-family: var(--serif);
+    color: var(--green-dark);
+    font-size: 20px;
+    margin: 0;
+  }
+  .btn-download {
+    padding: 7px 14px;
+    background: var(--white);
+    color: var(--green);
+    border: 1px solid var(--green-mid);
+    border-radius: 6px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-download:hover { background: var(--green-light); border-color: var(--green); }
+  .protocol-document {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 32px;
+  }
+  .protocol-section { margin-bottom: 28px; }
+  .protocol-type {
+    font-family: var(--serif);
+    font-size: 17px;
+    color: var(--green-dark);
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--green);
+    margin-bottom: 12px;
+  }
+  .protocol-objective,
+  .protocol-rationale {
+    font-size: 13px;
+    color: var(--ink-mid);
+    margin-bottom: 10px;
+    line-height: 1.6;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-radius: 6px;
+    border-left: 3px solid var(--green-mid);
+  }
+  .protocol-subsection { margin-bottom: 18px; }
+  .protocol-subsection h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    margin-bottom: 8px;
+  }
+  .protocol-subsection ul,
+  .protocol-subsection ol {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .protocol-subsection li {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.65;
+    margin-bottom: 4px;
+  }
+  .protocol-content {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.6;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-radius: 6px;
+    white-space: pre-wrap;
+  }
+
+  /* OT-2 panel */
+  .ot2-prompt {
+    margin-top: 28px;
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-align: center;
+  }
+  .ot2-prompt p {
+    font-family: var(--serif);
+    color: var(--ink-mid);
+    margin-bottom: 14px;
+    font-size: 15px;
+  }
+  .btn-ot2 {
+    display: inline-block;
+    padding: 10px 24px;
+    background: var(--green-dark);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-ot2:hover { background: var(--green); }
+  #ot2Panel { display: none; margin-top: 2rem; }
+  .ot2-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .ot2-header h2 {
+    font-family: var(--serif);
+    color: var(--green-dark);
+    font-size: 20px;
+    margin: 0;
+  }
+  .ot2-warning {
+    padding: 10px 14px;
+    background: var(--amber-light);
+    border: 1px solid #fcd34d;
+    border-radius: 7px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: var(--amber);
+  }
+  .ot2-code-block {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.65;
+    max-height: 600px;
+    overflow-y: auto;
+    white-space: pre;
+  }
+  .ot2-links {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .btn-ot2-link {
+    padding: 8px 16px;
+    background: var(--white);
+    color: var(--green-dark);
+    border: 1px solid var(--green-mid);
+    border-radius: 6px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .btn-ot2-link:hover { background: var(--green-light); border-color: var(--green); }
+  .ot2-tip {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--ink-light);
+    font-style: italic;
+  }
+
+  /* ── Assay form elements ──────────────────────────────────────────────── */
+  .assay-group {
+    margin-bottom: 28px;
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .assay-group-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--green-mid);
+  }
+  .assay-field { margin-bottom: 14px; }
+  .assay-field:last-child { margin-bottom: 0; }
+  .assay-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .assay-hint {
+    font-size: 11px;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-bottom: 5px;
+  }
+  .assay-input, .assay-select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--white);
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+  }
+  .assay-input:focus, .assay-select:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(26,122,74,0.12);
+  }
+  .assay-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 4px;
+  }
+  .assay-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .assay-checkbox input[type="checkbox"] { accent-color: var(--green); }
+
+  /* ── Protocol document ──────────────────────────────────────────────── */
+  .protocol-document {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 32px;
+  }
+  .protocol-document .protocol-section { margin-bottom: 28px; }
+  .protocol-document .protocol-type {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--green-dark);
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--green);
+    margin-bottom: 12px;
+  }
+  .protocol-document .protocol-objective,
+  .protocol-document .protocol-rationale {
+    font-size: 13px;
+    color: var(--ink-mid);
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+  .protocol-document .protocol-subsection { margin-bottom: 14px; }
+  .protocol-document .protocol-subsection h3 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .protocol-document ul,
+  .protocol-document ol {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .protocol-document li {
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.65;
+    margin-bottom: 4px;
+  }
+  .protocol-document .protocol-content {
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.65;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    white-space: pre-wrap;
+  }
+  .error-panel {
+    background: var(--red-light);
+    border: 1px solid #fca5a5;
+    border-radius: 10px;
+    padding: 20px 24px;
+    color: #7f1d1d;
+    display: none;
+  }
+  .error-panel.visible { display: block; }
+  .error-panel h3 { margin-bottom: 6px; font-size: 14px; }
+  .error-panel pre { font-size: 11px; margin-top: 8px; opacity: 0.7; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">Gene Therapy Analysis</div>
+      <div class="brand-name">RareSight</div>
+      <div class="brand-sub">Therapeutic Target &amp; Assay Parameter Tool<br>for Monogenic Disease</div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-label">Analysis Input</div>
+
+      <div class="field">
+        <label>Gene Symbol / Disease</label>
+        <input type="text" id="geneInput" placeholder="e.g. SCN1A, MECP2, BRAF"
+               autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="hint">HGNC symbol for monogenic disease gene</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-label">Patient Variant <span style="font-weight:400;opacity:.6">(optional)</span></div>
+
+      <div class="field">
+        <label>HGVS cDNA Variant</label>
+        <input type="text" id="variantInput" placeholder="e.g. c.4849C>T"
+               autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="hint">Activates variant-level analysis, CRISPR guide design &amp; gnomAD lookup</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <button class="btn-run" id="runBtn" onclick="runAnalysis()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Run Analysis
+      </button>
+
+      <button class="btn-pdf" id="pdfBtn" onclick="downloadPDF()" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Export PDF Report
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <span class="status-pill status-idle" id="statusPill">
+        <span id="statusDot">&#9679;</span>
+        <span id="statusText">Ready</span>
+      </span>
+    </div>
+  </aside>
+
+  <!-- ── Main output ──────────────────────────────────────────────────────── -->
+  <main class="main" id="mainPanel">
+
+    <div class="output-empty" id="emptyState">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="36" stroke="#1a7a4a" stroke-width="2"/>
+        <path d="M28 40h24M40 28v24" stroke="#1a7a4a" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="40" cy="40" r="8" stroke="#1a7a4a" stroke-width="1.5" stroke-dasharray="3 3"/>
+      </svg>
+      <h2>No analysis yet</h2>
+      <p>Enter a gene symbol (and optionally a patient variant) in the sidebar, then click Run Analysis.</p>
+    </div>
+
+    <div class="error-panel" id="errorPanel">
+      <h3>&#9888; Analysis failed</h3>
+      <div id="errorMsg"></div>
+      <pre id="errorDetail"></pre>
+    </div>
+
+    <div class="output-content" id="outputContent"></div>
+
+    <!-- ── Assay Generator Panels ──────────────────────────────────────────── -->
+
+    <!-- Question form (hidden until "Generate Validation Assay" clicked) -->
+    <div id="assayPanel" style="display:none;max-width:900px;margin:24px auto;padding:0 40px 40px;">
+      <div style="border-top:2px solid var(--green);padding-top:28px;margin-bottom:24px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:8px;">Step 2 of 3</div>
+        <h2 style="font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);margin:0;">Validation Assay Parameters</h2>
+        <p style="font-size:13px;color:var(--ink-light);margin-top:6px;">Answer the following so the protocol can be tailored to your lab setup.</p>
+      </div>
+
+      <!-- Group 1 -->
+      <div class="assay-group">
+        <div class="assay-group-title">Cell Model &amp; Treatment</div>
+
+        <div class="assay-field">
+          <label class="assay-label">Cell model</label>
+          <select id="assayCellModel" class="assay-select">
+            <option value="">— Select —</option>
+            <option>Patient-derived fibroblasts</option>
+            <option>iPSC-derived cells</option>
+            <option>HEK293 overexpression</option>
+            <option>Disease-relevant cell line</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="assay-field">
+          <label class="assay-label">Cell model details <span style="font-weight:400;opacity:.6;">(optional)</span></label>
+          <div class="assay-hint">e.g. "iPSC-derived cortical neurons", "SH-SY5Y", "primary hepatocytes"</div>
+          <input type="text" id="assayCellModelDetail" class="assay-input" placeholder="Specify if needed...">
+        </div>
+
+        <div class="assay-field">
+          <label class="assay-label">Dose / concentration range</label>
+          <div class="assay-hint">e.g. "1e10, 1e11, 1e12 vg/mL" for AAV · "10nM, 100nM, 1μM" for ASO</div>
+          <input type="text" id="assayDose" class="assay-input" placeholder="Enter dose range...">
+        </div>
+
+        <div class="assay-field">
+          <label class="assay-label">Measurement timepoints</label>
+          <div class="assay-hint">e.g. "48h, 7d, 14d"</div>
+          <input type="text" id="assayTimepoints" class="assay-input" placeholder="Enter timepoints...">
+        </div>
+
+        <div class="assay-field">
+          <label class="assay-label">Vehicle / negative control</label>
+          <div class="assay-hint">e.g. "PBS", "empty AAV capsid (same serotype)", "scrambled ASO"</div>
+          <input type="text" id="assayVehicle" class="assay-input" placeholder="Enter vehicle control...">
+        </div>
+
+        <div class="assay-field">
+          <label class="assay-label">Cell passage / confluency at treatment <span style="font-weight:400;opacity:.6;">(optional)</span></label>
+          <input type="text" id="assayPassage" class="assay-input" placeholder="e.g. P5, 80% confluent">
+        </div>
+      </div>
+
+      <!-- Group 2 -->
+      <div class="assay-group">
+        <div class="assay-group-title">Readout &amp; Equipment</div>
+        <div class="assay-field">
+          <label class="assay-label">Available equipment <span style="font-weight:400;opacity:.6;">(select all that apply)</span></label>
+          <div class="assay-checkboxes">
+            <label class="assay-checkbox"><input type="checkbox" name="assayEquip" value="qPCR machine"> qPCR machine</label>
+            <label class="assay-checkbox"><input type="checkbox" name="assayEquip" value="Western blot (SDS-PAGE)"> Western blot (SDS-PAGE)</label>
+            <label class="assay-checkbox"><input type="checkbox" name="assayEquip" value="Flow cytometer"> Flow cytometer</label>
+            <label class="assay-checkbox"><input type="checkbox" name="assayEquip" value="Plate reader (absorbance/fluorescence)"> Plate reader</label>
+            <label class="assay-checkbox"><input type="checkbox" name="assayEquip" value="Confocal/fluorescence microscope"> Confocal / fluorescence microscope</label>
+            <label class="assay-checkbox"><input type="checkbox" name="assayEquip" value="Nanodrop/Bioanalyser"> Nanodrop / Bioanalyser</label>
+            <label class="assay-checkbox"><input type="checkbox" name="assayEquip" value="Sequencer (Sanger/NGS)"> Sequencer (Sanger / NGS)</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 3 -->
+      <div class="assay-group">
+        <div class="assay-group-title">Controls &amp; Replicates</div>
+
+        <div class="assay-field">
+          <label class="assay-label">Positive control <span style="font-weight:400;opacity:.6;">(known-working reagent, if available)</span></label>
+          <div class="assay-hint">e.g. "Commercial anti-SCN1A siRNA (Dharmacon)" — leave blank if none</div>
+          <input type="text" id="assayPositive" class="assay-input" placeholder="None available">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="assay-field">
+            <label class="assay-label">Biological replicates</label>
+            <div class="assay-hint">Minimum 3 recommended</div>
+            <input type="number" id="assayBioReps" class="assay-input" value="3" min="3" max="12">
+          </div>
+          <div class="assay-field">
+            <label class="assay-label">Technical replicates</label>
+            <div class="assay-hint">Minimum 2; recommend 3</div>
+            <input type="number" id="assayTechReps" class="assay-input" value="3" min="2" max="6">
+          </div>
+        </div>
+      </div>
+
+      <button id="btnGenerateProtocol" onclick="submitAssayForm()" style="
+        width:100%;padding:14px;background:var(--green);color:#fff;border:none;
+        border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;
+        cursor:pointer;margin-top:8px;transition:background .2s;letter-spacing:.02em;">
+        Generate Protocol
+      </button>
+      <div id="assayLoadingMsg" style="display:none;text-align:center;padding:20px;font-size:13px;color:var(--ink-light);">
+        <span class="spinner"></span>&nbsp; Generating protocol via Claude Opus — this may take 15–30 seconds…
+      </div>
+    </div>
+
+    <!-- Protocol display (hidden until /assay returns) -->
+    <div id="protocolPanel" style="display:none;max-width:900px;margin:24px auto;padding:0 40px 40px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--green);padding-top:24px;margin-bottom:20px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:4px;">Validation Protocol</div>
+          <h2 style="font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);margin:0;" id="protocolTitle">Protocol</h2>
+        </div>
+        <button onclick="downloadProtocol()" style="
+          padding:9px 16px;background:transparent;color:var(--green);
+          border:1px solid var(--green-mid);border-radius:6px;
+          font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;">
+          &#8615; Download .txt
+        </button>
+      </div>
+      <div id="protocolContent" class="protocol-document"></div>
+
+      <!-- OT-2 prompt -->
+      <div style="margin-top:28px;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-align:center;">
+        <div style="font-family:var(--serif);font-size:16px;color:var(--ink-mid);margin-bottom:12px;">
+          Want to automate this assay on the Opentrons OT-2 / Flex robot?
+        </div>
+        <button onclick="startOT2Flow()" style="
+          padding:11px 28px;background:var(--green-dark);color:#fff;border:none;
+          border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;
+          cursor:pointer;transition:background .2s;">
+          &#9881; Generate Automated Robot Protocol
+        </button>
+      </div>
+    </div>
+
+    <!-- OT-2 panel (hidden until user clicks Generate Robot Protocol) -->
+    <div id="ot2Panel" style="display:none;max-width:900px;margin:24px auto;padding:0 40px 60px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--green);padding-top:24px;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:4px;">Opentrons OT-2 / Flex</div>
+          <h2 style="font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);margin:0;">Automated Robot Protocol</h2>
+        </div>
+        <button onclick="downloadOT2()" style="
+          padding:9px 16px;background:transparent;color:var(--green);
+          border:1px solid var(--green-mid);border-radius:6px;
+          font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;">
+          &#8615; Download .py
+        </button>
+      </div>
+      <div style="padding:10px 14px;background:var(--amber-light);border:1px solid #fcd34d;border-radius:7px;margin-bottom:14px;font-size:12px;color:#78350f;">
+        &#9888; Template only — review all labware definitions, volumes, and parameters before running on the robot.
+      </div>
+      <pre style="background:#1e293b;color:#e2e8f0;border-radius:8px;padding:20px;overflow-x:auto;font-family:var(--mono);font-size:11px;line-height:1.7;max-height:600px;overflow-y:auto;"><code id="ot2Code"></code></pre>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+        <a id="ot2LibraryLink" href="#" target="_blank" rel="noopener" style="
+          padding:9px 16px;background:var(--white);color:var(--green-dark);
+          border:1px solid var(--green-mid);border-radius:6px;
+          font-family:var(--sans);font-size:12px;font-weight:500;text-decoration:none;">
+          &#128269; Search Opentrons Protocol Library
+        </a>
+        <a href="https://insights.opentrons.com/try-opentrons-ai-today?_gl=1*1tnl7i3*_ga*NzcyMjI0NTkuMTc3MTAyMzMxMA..*_ga_66HK7MC5D7*czE3NzIzODg4NzUkbzUkZzEkdDE3NzIzODkxNDgkajYwJGwwJGgw*_gcl_aw*R0NMLjE3NzIzODkxNTEuQ2owS0NRaUE1SV9OQmhEVkFSSXNBT3JxSXNaa0E0WVhJZ3VNZkJyc3RWODNISjBGT243S3prbGF6RXlkUGhwN2ZpOV9zeVFiU1lXOURab2FBcC1nRUFMd193Y0I.*_gcl_au*MTQ3MTcyMjMzNy4xNzcxMDIzMzEw*_ga_GNSMNLW4RY*czE3NzIzODg4NzUkbzUkZzEkdDE3NzIzODkxNDgkajYwJGwwJGg1ODkyNTIz" target="_blank" rel="noopener" style="
+          padding:9px 16px;background:var(--white);color:var(--green-dark);
+          border:1px solid var(--green-mid);border-radius:6px;
+          font-family:var(--sans);font-size:12px;font-weight:500;text-decoration:none;">
+          &#129302; Open OpentronsAI Designer
+        </a>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--ink-light);">
+        Tip: Download the .py file and paste it into OpentronsAI Designer for AI-assisted editing and simulation.
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let lastData = null;
+
+function setStatus(state, text) {
+  const pill = document.getElementById('statusPill');
+  const dot  = document.getElementById('statusDot');
+  const txt  = document.getElementById('statusText');
+  pill.className = 'status-pill status-' + state;
+  txt.textContent = text;
+  dot.innerHTML = state === 'loading'
+    ? '<span class="spinner"></span>'
+    : '&#9679;';
+}
+
+async function runAnalysis() {
+  const gene    = document.getElementById('geneInput').value.trim();
+  const variant = document.getElementById('variantInput').value.trim();
+
+  if (!gene) {
+    document.getElementById('geneInput').focus();
+    return;
+  }
+
+  // UI: loading state
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('pdfBtn').disabled = true;
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('outputContent').classList.remove('visible');
+  document.getElementById('outputContent').innerHTML = '';
+  document.getElementById('errorPanel').classList.remove('visible');
+  setStatus('loading', 'Querying databases…');
+  lastData = null;
+
+  try {
+    const res = await fetch('/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gene, variant: variant || null })
+    });
+    const json = await res.json();
+
+    if (!res.ok || json.error) {
+      const e = new Error(json.error || 'Server error');
+      e.status = res.status;
+      throw e;
+    }
+
+    lastData = json.data;
+    renderReport(json.data);
+    setStatus('done', 'Analysis complete');
+    document.getElementById('pdfBtn').disabled = false;
+
+  } catch (err) {
+    const panel = document.getElementById('errorPanel');
+    const msg   = document.getElementById('errorMsg');
+    panel.classList.add('visible');
+    // 400 = gene not found — show as a soft amber warning, not a red server error
+    if (err.status === 400) {
+      panel.style.cssText = 'background:#fef3c7;border-color:#fcd34d;color:#78350f;';
+      msg.innerHTML = '&#128269; ' + err.message;
+    } else {
+      panel.style.cssText = '';
+      msg.textContent = err.message;
+    }
+    setStatus('error', err.status === 400 ? 'Gene not found' : 'Error');
+  } finally {
+    document.getElementById('runBtn').disabled = false;
+  }
+}
+
+async function downloadPDF() {
+  if (!lastData) return;
+  const gene    = document.getElementById('geneInput').value.trim();
+  const variant = document.getElementById('variantInput').value.trim();
+  setStatus('loading', 'Generating PDF…');
+  try {
+    const res = await fetch('/pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gene, variant, data: lastData })
+    });
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `RareSight_${gene}${variant ? '_'+variant.replace('>','_') : ''}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus('done', 'PDF downloaded');
+  } catch(e) {
+    setStatus('error', 'PDF failed');
+  }
+}
+
+// Allow Enter key to trigger analysis
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') runAnalysis();
+});
+
+// ── Render ──────────────────────────────────────────────────────────────────
+function renderReport(d) {
+  const el = document.getElementById('outputContent');
+  el.innerHTML = buildReport(d);
+  el.classList.add('visible');
+}
+
+function esc(s) {
+  if (s == null) return '—';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function omimLink(id)   { return `<a href="https://omim.org/entry/${id}" target="_blank">${id}</a>`; }
+function uniprotLink(id){ return `<a href="https://www.uniprot.org/uniprotkb/${id}" target="_blank">${id}</a>`; }
+function ensemblLink(id){ return `<a href="https://www.ensembl.org/id/${id}" target="_blank">${id}</a>`; }
+function pmidLink(id)   { return `<a class="pmid-link" href="https://pubmed.ncbi.nlm.nih.gov/${id}/" target="_blank">PMID:${id}</a>`; }
+
+function mechChipClass(m) {
+  if (!m) return 'unk';
+  const ml = m.toLowerCase();
+  if (ml.includes('gain')) return 'gof';
+  if (ml.includes('loss')) return 'lof';
+  if (ml.includes('dominant negative')) return 'dn';
+  if (ml.includes('mixed')) return 'mix';
+  return 'unk';
+}
+
+function scoreClass(s) {
+  if (s >= 70) return 'score-high';
+  if (s >= 40) return 'score-mid';
+  return 'score-low';
+}
+
+function phaseClass(p) {
+  if (p == 4) return 'phase-4';
+  if (p == 3) return 'phase-3';
+  if (p == 2) return 'phase-2';
+  return 'phase-1';
+}
+
+function section(title, innerHtml) {
+  if (!innerHtml) return '';
+  return `
+    <div class="section">
+      <div class="section-title">${esc(title)}</div>
+      ${innerHtml}
+    </div>`;
+}
+
+function buildReport(d) {
+  const gene = d.gene_symbol || '';
+  const variantHgvs = d.patient_variant_hgvs || '';
+  const ts = new Date().toLocaleString('en-US', {
+    month:'short', day:'numeric', year:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+
+  let html = `
+    <div class="report-header">
+      <h1>${esc(gene)}${d.omim_id ? ` <span style="font-size:15px;font-weight:400;color:var(--ink-light);">OMIM ${esc(d.omim_id)}</span>` : ''}</h1>
+      ${variantHgvs ? `<div class="variant-badge">${esc(variantHgvs)}</div>` : ''}
+      <div class="report-meta">Generated ${ts}</div>
+    </div>`;
+
+  // ── 1. Gene identity
+  const idCells = [
+    ['OMIM ID',           d.omim_id      ? omimLink(d.omim_id) : '—'],
+    ['UniProt',           d.uniprot_id   ? uniprotLink(d.uniprot_id) : '—'],
+    ['Ensembl Gene',      d.ensembl_gene_id ? ensemblLink(d.ensembl_gene_id) : '—'],
+    ['RefSeq Transcript', esc(d.refseq_transcript)],
+    ['Protein Length',    d.protein_length_aa ? `${d.protein_length_aa} aa` : '—'],
+    ['Coding Sequence',   d.coding_sequence_kb ? `${d.coding_sequence_kb} kb` : '—'],
+  ];
+  const idGrid = `<div class="id-grid">` +
+    idCells.map(([k,v]) => `<div class="id-cell"><div class="key">${k}</div><div class="val">${v}</div></div>`).join('') +
+    `</div>`;
+  html += section('Gene Identity & Sequence', idGrid);
+
+  // ── 2. Literature evidence
+  const le = d.literature_evidence;
+  if (le) {
+    let leHtml = `<div class="lit-grid" style="grid-template-columns:1fr;">
+      <div class="lit-card">
+        <div class="num">${le.gene_pubmed_count || 0}</div>
+        <div class="lbl">Gene publications (PubMed)</div>
+      </div>
+    </div>
+    <div class="tier-bar">
+      <div class="tier-label">${esc((le.evidence_tier||'').toUpperCase())}</div>
+      <div class="tier-note">${esc(le.tier_rationale)}</div>
+    </div>`;
+    if (le.top_review_pmids && le.top_review_pmids.length) {
+      leHtml += `<div class="pmids">` +
+        le.top_review_pmids.map(pmidLink).join('') +
+        `</div>`;
+    }
+    html += section('Literature Evidence', leHtml);
+  }
+
+  // ── 3. Patient variant
+  if (variantHgvs) {
+    const vr  = d.patient_variant_resolved;
+    const vpi = d.variant_protein_intersection;
+    let vpHtml = `<div class="variant-panel">
+      <div class="vp-header">
+        <span>${esc(variantHgvs)}</span>
+        <span style="opacity:.6;font-size:11px;">${vr ? esc(vr.significance) : 'Not found in ClinVar'}</span>
+      </div>
+      <div class="vp-body">`;
+
+    if (vr) {
+      vpHtml += vRow('ClinVar record', esc(vr.name))
+              + vRow('Significance', esc(vr.significance))
+              + vRow('Molecular consequence', esc(vr.molecular_consequence))
+              + vRow('Associated condition', esc(vr.condition))
+              + vRow('Mechanism clue', esc(vr.mechanism_clue));
+    } else {
+      vpHtml += `<div class="vp-row"><div class="vk">ClinVar</div>
+        <div class="vv" style="color:var(--ink-light);font-style:italic;">No exact match — positional analysis used</div></div>`;
+    }
+
+    if (vpi) {
+      vpHtml += vRow('Protein position',
+        vpi.aa_position ? `aa ${vpi.aa_position}` : 'Unknown');
+
+      const af = vpi.gnomad_allele_frequency;
+      vpHtml += vRow('gnomAD allele frequency',
+        af != null ? af.toExponential(2) : 'Absent / ultra-rare');
+
+      if (vpi.clinical_significance) {
+        vpHtml += vRow('ClinVar significance', esc(vpi.clinical_significance));
+      }
+
+      const feats = vpi.overlapping_features || [];
+      if (feats.length) {
+        let featsHtml = `<div style="margin-top:4px;">`;
+        feats.forEach(f => {
+          const cls = f.feature_type === 'Active site' ? 'active-site'
+                    : f.feature_type === 'Binding site' ? 'binding-site' : 'domain';
+          featsHtml += `<div class="feature-hit ${cls}">
+            <span class="feature-tag">${esc(f.feature_type)}</span>
+            <span>${esc(f.description || f.feature_type)}</span>
+            <span style="font-family:var(--mono);font-size:10px;margin-left:auto;opacity:.7;">aa ${f.start}–${f.end}</span>
+          </div>`;
+        });
+        featsHtml += '</div>';
+        vpHtml += vRow(`Protein feature overlap (${feats.length})`, featsHtml, true);
+      } else {
+        vpHtml += vRow('Protein feature overlap', 'No overlap with annotated UniProt features');
+      }
+
+      const feas = vpi.aso_discrimination_feasible;
+      const asoClass = feas ? 'feasible' : 'uncertain';
+      vpHtml += `<div class="vp-row"><div class="vk">ASO discrimination</div>
+        <div class="vv">
+          <div class="aso-box ${asoClass}">
+            <strong>${feas === true ? 'Feasible' : feas === false ? 'Not Feasible' : 'Uncertain'}</strong>
+            ${vpi.aso_notes ? `<div style="margin-top:4px;">${esc(vpi.aso_notes)}</div>` : ''}
+          </div>
+        </div></div>`;
+    }
+
+    vpHtml += `</div></div>`;
+    html += section('Patient Variant Analysis', vpHtml);
+  }
+
+    // ── 3.a ClinVar variants
+    const cvars = (d.representative_variants || [])
+    .filter(v => v.position_cdna || v.position_protein).slice(0, 12);
+  if (cvars.length) {
+    let cvHtml = `<table class="cv-table">
+      <thead><tr><th>Mechanism</th><th>cDNA</th><th>Protein</th><th>Consequence</th></tr></thead>
+      <tbody>`;
+    cvars.forEach(v => {
+      const mc = v.mechanism_clue === 'LoF' ? 'mech-lof'
+               : v.mechanism_clue === 'GoF' ? 'mech-gof' : 'mech-unk';
+      cvHtml += `<tr>
+        <td class="${mc}">${esc(v.mechanism_clue)}</td>
+        <td>${esc(v.position_cdna)}</td>
+        <td>${esc(v.position_protein)}</td>
+        <td>${esc(v.molecular_consequence)}</td>
+      </tr>`;
+    });
+    cvHtml += `</tbody></table>`;
+    html += section(`Key ClinVar Variants (${cvars.length} shown)`, cvHtml);
+  }
+
+  // ── 4. Therapy combos (payload + delivery + per-combo confidence)
+  const combos = d.therapy_combos || [];
+  if (combos.length) {
+    let therapyHtml = `<div class="combo-list">`;
+    combos.forEach((c, i) => {
+      const isPrimary = i === 0;
+      const conf = (c.confidence || 'experimental').toLowerCase();
+      const confDots = { high: 4, medium: 3, low: 2, experimental: 1 }[conf] || 1;
+      const dots = Array.from({length: 4}, (_, i) =>
+        `<span class="conf-dot ${i < confDots ? 'filled conf-dot-'+conf : 'empty'}"></span>`
+      ).join('');
+
+      therapyHtml += `
+        <div class="combo-card ${isPrimary ? 'combo-primary' : ''}">
+          ${isPrimary ? '<div class="combo-rank-badge">PRIMARY</div>' : `<div class="combo-rank-badge alt">ALT ${i}</div>`}
+          <div class="combo-body">
+            <div class="combo-payload">${esc(c.payload)}</div>
+            <div class="combo-delivery">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              ${esc(c.delivery)}
+            </div>
+            ${c.notes ? `<div class="combo-notes">${esc(c.notes)}</div>` : ''}
+          </div>
+          <div class="combo-conf conf-${conf}">
+            <div class="conf-dots">${dots}</div>
+            <div class="conf-label">${conf.toUpperCase()}</div>
+            <div class="conf-rationale">${esc(c.confidence_rationale)}</div>
+          </div>
+        </div>`;
+    });
+    therapyHtml += `</div>`;
+    html += section('Therapy Recommendations', therapyHtml);
+  }
+
+  // ── 6. Primary Modality Guide (dynamic — adapts to primary therapy type)
+  const primaryCombo = (d.therapy_combos || [])[0];
+  const mg = primaryCombo && primaryCombo.modality_guide;
+  if (mg) {
+    const modType = (mg.modality_type || '').toLowerCase();
+    const sectionTitle = {
+      aav:       'AAV Design Parameters',
+      mrna_lnp:  'mRNA + LNP Design Parameters',
+      aso_sirna: 'ASO / siRNA Design Parameters',
+      crispr:    'CRISPR Design Parameters',
+      cast:      'CAST / Transposon Design Parameters',
+    }[modType] || 'Primary Modality Design Parameters';
+
+    let mgHtml = '';
+
+    // ── Key parameters grid ────────────────────────────────────────────────
+    const kps = mg.key_parameters || [];
+    if (kps.length) {
+      mgHtml += `<div class="mg-param-grid">` +
+        kps.map(kp => {
+          const colon = kp.indexOf(':');
+          const k = colon > -1 ? kp.slice(0, colon).trim() : 'Parameter';
+          const v = colon > -1 ? kp.slice(colon + 1).trim() : kp;
+          return `<div class="mg-param-cell">
+            <div class="mg-param-key">${esc(k)}</div>
+            <div class="mg-param-val">${esc(v)}</div>
+          </div>`;
+        }).join('') +
+        `</div>`;
+    }
+
+    // ── Modality-specific detail blocks ────────────────────────────────────
+
+    // AAV
+    if (modType === 'aav') {
+      if (mg.aav_itr_config) mgHtml += mgDetail('Vector Configuration', mg.aav_itr_config);
+      if (mg.aav_tropism_note) mgHtml += mgDetail('Tropism / Promoter Note', mg.aav_tropism_note);
+      if (mg.aav_packaging_note) mgHtml += mgDetail('Manufacture', mg.aav_packaging_note);
+    }
+
+    // mRNA + LNP
+    if (modType === 'mrna_lnp') {
+      if (mg.mrna_utr_design)  mgHtml += mgDetail('UTR Design', mg.mrna_utr_design);
+      if (mg.mrna_codon_opt)   mgHtml += mgDetail('Codon Optimisation', mg.mrna_codon_opt);
+      if (mg.lnp_targeting)    mgHtml += mgDetail('LNP Targeting', mg.lnp_targeting);
+      if (mg.mrna_stability)   mgHtml += mgDetail('Stability & Redosing', mg.mrna_stability);
+    }
+
+    // ASO / siRNA
+    if (modType === 'aso_sirna') {
+      if (mg.aso_mechanism)      mgHtml += mgDetail('Mechanism', mg.aso_mechanism);
+      if (mg.aso_target_region)  mgHtml += mgDetail('Target Region', mg.aso_target_region);
+      if (mg.aso_design_window)  mgHtml += mgDetail('Design Window', mg.aso_design_window);
+      if (mg.sirna_strand_bias)  mgHtml += mgDetail('Strand Bias', mg.sirna_strand_bias);
+    }
+
+    // CRISPR — include guide table if available
+    if (modType === 'crispr') {
+      if (mg.crispr_strategy)       mgHtml += mgDetail('Strategy', mg.crispr_strategy);
+      if (mg.crispr_window)         mgHtml += mgDetail('Editing Window', mg.crispr_window);
+      if (mg.crispr_delivery_form)  mgHtml += mgDetail('Delivery Form', mg.crispr_delivery_form);
+      if (mg.crispr_offtarget)      mgHtml += mgDetail('Off-target Risk', mg.crispr_offtarget);
+
+      // Sequence context + guide table from crispr_parameters
+      const cr = d.crispr_parameters;
+      if (cr) {
+        if (cr.base_editing_feasible || cr.prime_editing_feasible) {
+          mgHtml += `<div class="crispr-meta" style="margin-top:10px;">
+            ${cr.base_editing_feasible ? `<span class="crispr-badge ${cr.base_edit_type && cr.base_edit_type.startsWith('CBE') ? 'cbe' : 'abe'}">&#10003; ${esc(cr.base_edit_type)}</span>` : ''}
+            ${cr.prime_editing_feasible ? `<span class="crispr-badge pe">&#10003; Prime Editing</span>` : ''}
+          </div>`;
+        }
+        if (cr.target_sequence_context) {
+          mgHtml += `<div class="mg-sublabel">Sequence window</div>
+            <div class="crispr-seq-ctx">${esc(cr.target_sequence_context)}</div>`;
+        }
+        const guides = cr.candidate_guides || [];
+        if (guides.length) {
+          mgHtml += `<table class="guide-table" style="margin-top:10px;">
+            <thead><tr>
+              <th>#</th><th>Guide (5'&#x2192;3')</th><th>PAM</th><th>Strand</th>
+              <th>Dist (bp)</th><th>GC</th><th>Score</th><th>Flags</th>
+            </tr></thead><tbody>`;
+          guides.forEach((g, i) => {
+            const sc = g.quality_score || 0;
+            const flags = (g.quality_flags || [])
+              .map(f => `<span class="flag-pill">${esc(f)}</span>`).join('') || '—';
+            mgHtml += `<tr>
+              <td>${i+1}</td>
+              <td class="seq-cell">${esc(g.sequence)}</td>
+              <td class="seq-cell">${esc(g.pam)}</td>
+              <td style="text-align:center;">${esc(g.strand)}</td>
+              <td style="text-align:center;font-family:var(--mono);">${g.distance_to_variant_bp}</td>
+              <td style="text-align:center;font-family:var(--mono);">${Math.round((g.gc_content||0)*100)}%</td>
+              <td class="score-cell ${scoreClass(sc)}">${sc}</td>
+              <td>${flags}</td>
+            </tr>`;
+          });
+          mgHtml += `</tbody></table>`;
+        }
+        if (cr.notes && cr.notes.length) {
+          mgHtml += cr.notes.map(n =>
+            `<div class="mg-note">&#8505; ${esc(n)}</div>`
+          ).join('');
+        }
+      }
+    }
+
+    // CAST
+    if (modType === 'cast') {
+      if (mg.cast_system)               mgHtml += mgDetail('System', mg.cast_system);
+      if (mg.cast_target_site)          mgHtml += mgDetail('Target Site', mg.cast_target_site);
+      if (mg.cast_transposase_delivery) mgHtml += mgDetail('Transposase Delivery', mg.cast_transposase_delivery);
+      if (mg.cast_offtarget_risk)       mgHtml += mgDetail('Integration Risk', mg.cast_offtarget_risk);
+    }
+
+    // ── Design notes (all modalities) ────────────────────────────────────
+    const notes = mg.design_notes || [];
+    if (notes.length) {
+      mgHtml += `<div class="mg-notes-list">` +
+        notes.map(n => `<div class="mg-note">&#8505; ${esc(n)}</div>`).join('') +
+        `</div>`;
+    }
+
+    html += section(sectionTitle, mgHtml);
+  }
+
+  // ── 7. Protein features
+  const domains  = d.druggable_domains  || [];
+  const asites   = d.active_sites  || [];
+  const bsites   = d.binding_sites || [];
+  const allFeats = [
+    ...domains.slice(0,5).map(f => ({...f, label:'Domain', cls:'ft-domain'})),
+    ...asites.slice(0,5).map(f  => ({...f, label:'Active Site', cls:'ft-active'})),
+    ...bsites.slice(0,5).map(f  => ({...f, label:'Binding Site', cls:'ft-binding'})),
+  ];
+  if (allFeats.length) {
+    const featsHtml = `<div class="feat-list">` +
+      allFeats.map(f => `<div class="feat-item">
+        <span class="feat-type-tag ${f.cls}">${f.label}</span>
+        <span class="feat-desc">${esc(f.description || '—')}</span>
+        <span class="feat-pos">aa ${f.start}–${f.end}</span>
+      </div>`).join('') +
+      `</div>`;
+    html += section('Protein Features (UniProt)', featsHtml);
+  }
+
+
+  // ── 9. Pathways
+  const pws = d.pathway_names || [];
+  const dns = d.downstream_targets || [];
+  if (pws.length || dns.length) {
+    let pwHtml = `<div class="pathway-list">` +
+      pws.slice(0,8).map(pw => {
+        const parts = pw.split(': ');
+        const db  = parts[0] || '';
+        const name = parts.slice(1).join(': ');
+        const dbcls = db.toLowerCase().includes('kegg') ? 'db-kegg'
+                    : db.toLowerCase().includes('reactome') ? 'db-reactome'
+                    : 'db-wikipathways';
+        return `<div class="pathway-item">
+          <span class="db-tag ${dbcls}">${esc(db)}</span>
+          <span>${esc(name)}</span>
+        </div>`;
+      }).join('') +
+      `</div>`;
+    if (dns.length) {
+      pwHtml += `<div style="margin-top:10px;font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Downstream druggable nodes</div>
+      <div class="downstream-chips">` +
+        [...new Set(dns)].sort().map(n => `<span class="dnchip">${esc(n)}</span>`).join('') +
+        `</div>`;
+    }
+    html += section('Pathways & Downstream Targets', pwHtml);
+  }
+
+  // ── 10. Known drugs
+  const drugs = d.known_drugs || [];
+  if (drugs.length) {
+    const seen = new Set();
+    const uniq = drugs.filter(dr => {
+      if (!dr.drug || seen.has(dr.drug)) return false;
+      seen.add(dr.drug); return true;
+    }).slice(0, 10);
+    const drugsHtml = `<div class="drug-grid">` +
+      uniq.map(dr => {
+        const pc = phaseClass(dr.max_phase);
+        return `<div class="drug-card">
+          <div class="dname">${esc(dr.drug)}</div>
+          <span class="dphase ${pc}">Phase ${dr.max_phase || '?'}</span>
+          <div class="dmech">${esc(dr.mechanism || '—')}</div>
+        </div>`;
+      }).join('') +
+      `</div>`;
+    html += section('Known Drugs (Open Targets)', drugsHtml);
+  }
+
+  // ── 11. Notes / warnings
+  const notes = d.notes || [];
+  if (notes.length) {
+    const notesHtml = `<div class="notes-list">` +
+      notes.map(n => {
+        const isCrit = n.toLowerCase().includes('critical') || n.toLowerCase().includes('active site');
+        return `<div class="note-item ${isCrit ? 'critical' : 'warn'}">
+          <span class="note-icon">${isCrit ? '&#9888;' : '&#9432;'}</span>
+          <span>${esc(n)}</span>
+        </div>`;
+      }).join('') +
+      `</div>`;
+    html += section('Clinical Notes & Warnings', notesHtml);
+  }
+
+  // ── 12. OMIM text
+  const omimText = d.omim_molecular_genetics_summary;
+  if (omimText) {
+    const clean = omimText.replace(/<[^>]+>/g, '');
+    html += section('OMIM Molecular Genetics Summary',
+      `<div class="omim-text">${esc(clean)}</div>`);
+  }
+
+  // ── Assay launch button (always shown after successful analysis)
+  html += `<div class="assay-launch" id="assayLaunch">
+    <div class="assay-launch-text">Ready to validate this therapy-target pairing in the lab?</div>
+    <button class="btn-assay" onclick="startAssayFlow()">&#9879; Generate Validation Assay Protocol</button>
+  </div>`;
+
+  return html;
+}
+
+function mgDetail(label, text) {
+  if (!text) return '';
+  return `<div class="mg-detail">
+    <div class="mg-detail-key">${esc(label)}</div>
+    <div class="mg-detail-val">${esc(text)}</div>
+  </div>`;
+}
+
+function vRow(key, valHtml, rawHtml=false) {
+  return `<div class="vp-row">
+    <div class="vk">${esc(key)}</div>
+    <div class="vv">${rawHtml ? valHtml : valHtml}</div>
+  </div>`;
+}
+
+// ── Assay Generator ─────────────────────────────────────────────────────────
+
+let assayResult = null;
+
+function startAssayFlow() {
+  const panel = document.getElementById('assayPanel');
+  panel.style.display = 'block';
+  // Reset downstream panels
+  document.getElementById('protocolPanel').style.display = 'none';
+  document.getElementById('ot2Panel').style.display = 'none';
+  assayResult = null;
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
+function submitAssayForm() {
+  let cellModel = document.getElementById('assayCellModel').value;
+  const cellDetail = document.getElementById('assayCellModelDetail').value.trim();
+  if (cellDetail) cellModel = cellModel ? cellModel + ' — ' + cellDetail : cellDetail;
+
+  const dose       = document.getElementById('assayDose').value.trim();
+  const timepoints = document.getElementById('assayTimepoints').value.trim();
+  const vehicle    = document.getElementById('assayVehicle').value.trim();
+  const passage    = document.getElementById('assayPassage').value.trim() || null;
+  const positive   = document.getElementById('assayPositive').value.trim() || 'None available';
+  const bioReps    = parseInt(document.getElementById('assayBioReps').value) || 3;
+  const techReps   = parseInt(document.getElementById('assayTechReps').value) || 3;
+
+  const equipment = Array.from(
+    document.querySelectorAll('input[name="assayEquip"]:checked')
+  ).map(cb => cb.value);
+
+  // Validation
+  if (!cellModel)        { alert('Please select a cell model.');            return; }
+  if (!dose)             { alert('Please enter a dose/concentration range.'); return; }
+  if (!timepoints)       { alert('Please enter measurement timepoints.');    return; }
+  if (!vehicle)          { alert('Please enter a vehicle control.');         return; }
+  if (!equipment.length) { alert('Please select at least one piece of equipment.'); return; }
+
+  const userAnswers = {
+    cell_model: cellModel, treatment_dose: dose,
+    treatment_timepoints: timepoints, vehicle_control: vehicle,
+    readout_equipment: equipment, positive_control: positive,
+    bio_replicates: bioReps, tech_replicates: techReps,
+    cell_passage: passage
+  };
+
+  const btn = document.getElementById('btnGenerateProtocol');
+  const msg = document.getElementById('assayLoadingMsg');
+  btn.style.display = 'none';
+  msg.style.display = 'block';
+
+  fetch('/assay', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pipeline_data: lastData, user_answers: userAnswers })
+  })
+  .then(r => r.json())
+  .then(data => {
+    btn.style.display = 'block';
+    msg.style.display = 'none';
+    if (data.error) { alert('Error generating protocol: ' + data.error); return; }
+    assayResult = data;
+    renderProtocol(data);
+  })
+  .catch(err => {
+    btn.style.display = 'block';
+    msg.style.display = 'none';
+    alert('Request failed: ' + err.message);
+  });
+}
+
+function renderProtocol(data) {
+  const gene     = (lastData && lastData.gene_symbol) || 'Protocol';
+  const variant  = (lastData && lastData.patient_variant_hgvs) || '';
+  const panel    = document.getElementById('protocolPanel');
+  const title    = document.getElementById('protocolTitle');
+  const content  = document.getElementById('protocolContent');
+
+  title.textContent = gene + (variant ? '  ·  ' + variant : '') + ' — Validation Protocol';
+  content.innerHTML = data.protocol_html || '<p style="color:var(--ink-light);">No protocol content returned.</p>';
+  panel.style.display = 'block';
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
+function downloadProtocol() {
+  if (!assayResult || !assayResult.protocol_text) return;
+  const gene = (lastData && lastData.gene_symbol) || 'protocol';
+  const blob = new Blob([assayResult.protocol_text], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = gene + '_validation_protocol.txt';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function startOT2Flow() {
+  if (!assayResult || !assayResult.ot2_script) {
+    alert('No OT-2 script available. Please generate a protocol first.');
+    return;
+  }
+  const panel  = document.getElementById('ot2Panel');
+  const codeEl = document.getElementById('ot2Code');
+  codeEl.textContent = assayResult.ot2_script;
+
+  const gene      = (lastData && lastData.gene_symbol) || '';
+  const assayType = (assayResult.templates_used || ['western blot'])[0].replace(/_/g, ' ');
+  document.getElementById('ot2LibraryLink').href =
+    'https://protocols.opentrons.com/?query=' + encodeURIComponent(assayType + ' ' + gene);
+
+  panel.style.display = 'block';
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
+function downloadOT2() {
+  if (!assayResult || !assayResult.ot2_script) return;
+  const gene = (lastData && lastData.gene_symbol) || 'protocol';
+  const blob = new Blob([assayResult.ot2_script], { type: 'text/x-python' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = gene + '_ot2_protocol.py';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
