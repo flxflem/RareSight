@@ -1,5 +1,5 @@
 [README.md](https://github.com/user-attachments/files/25665271/README.md)
-# TTPicker — Gene Therapy Target Analysis Tool
+# RareSight — Gene Therapy Target Analysis Tool
 
 A local web application for physicians and researchers to analyze therapeutic targets
 for monogenic diseases. Queries OMIM, UniProt, ClinVar, Ensembl, gnomAD, Open Targets,
@@ -26,7 +26,7 @@ bash start.sh
 ## Files
 
 ```
-ttpicker/
+RareSight/
 ├── app.py              ← Flask backend (API endpoints + PDF generation)
 ├── pipeline.py         ← Analysis pipeline (all database queries)
 ├── templates/
