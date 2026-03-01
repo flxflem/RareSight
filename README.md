@@ -1,5 +1,5 @@
 [README.md](https://github.com/user-attachments/files/25665271/README.md)
-# RareSight — Gene Therapy Target Analysis Tool
+# RareSight — Gene Therapy Target Analysis and Assay Validation Tool
 
 A local web application for physicians and researchers to analyze therapeutic targets
 for monogenic diseases. Queries OMIM, UniProt, ClinVar, Ensembl, gnomAD, Open Targets,
