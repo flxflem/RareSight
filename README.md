@@ -3,7 +3,7 @@
 
 A local web application for physicians and researchers to analyze therapeutic targets
 for monogenic diseases. Queries OMIM, UniProt, ClinVar, Ensembl, gnomAD, Open Targets,
-and PubMed to produce a structured clinical report.
+and PubMed to produce a structured clinical report. Details highest probable target-therapy matchings and generates validations assays. Option to convert to digital protocols to be run via liquid-handling robot.
 
 ## Quick Start
 
